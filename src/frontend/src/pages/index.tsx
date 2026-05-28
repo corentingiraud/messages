@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/router";
 import { Hero, HomeGutter, Footer, ProConnectButton } from "@gouvfr-lasuite/ui-kit";
 import { login, useAuth } from "@/features/auth";
 import { MainLayout } from "@/features/layouts/components/main";
@@ -13,11 +14,16 @@ export default function HomePage() {
   const { t } = useTranslation();
   const { theme, variant, themeConfig } = useTheme();
   const { user } = useAuth();
+  const router = useRouter();
 
   if (user) {
     return <MainLayout />;
   }
 
+  const handleLogin = () => {
+    const raw = router.query.next;
+    login(typeof raw === "string" ? raw : undefined);
+  };
 
   return (
     <AppLayout
@@ -33,7 +39,7 @@ export default function HomePage() {
             title={t("Simple and intuitive messaging")}
             banner="/images/banner.webp"
             subtitle={t("Send and receive your messages in an instant.")}
-            mainButton={<ProConnectButton onClick={login} />}
+            mainButton={<ProConnectButton onClick={handleLogin} />}
           />
         </HomeGutter>
         {themeConfig.footer && (

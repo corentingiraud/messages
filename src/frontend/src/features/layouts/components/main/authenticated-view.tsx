@@ -11,7 +11,8 @@ const AuthenticatedView = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         if (user === null) {
-            router.replace("/");
+            const next = window.location.pathname + window.location.search + window.location.hash;
+            router.replace({ pathname: "/", query: { next } });
         }
     }, [user, router]);
 
