@@ -10,7 +10,7 @@ export enum PORTALS {
 export const DEFAULT_PAGE_SIZE = 20;
 
 // Default silent login retry interval in milliseconds
-export const SILENT_LOGIN_RETRY_INTERVAL = 30 * 1000; // 30 seconds
+export const SILENT_LOGIN_RETRY_INTERVAL = 60 * 1000; // 1 minute
 
 // Session storage keys
 export const APP_STORAGE_PREFIX = "messages_";
@@ -21,6 +21,7 @@ export const MESSAGE_IMPORT_TASK_KEY = APP_STORAGE_PREFIX + "message-import-task
 export const EXTERNAL_IMAGES_CONSENT_KEY = APP_STORAGE_PREFIX + "external-images-consent";
 export const THREAD_SELECTED_FILTERS_KEY = APP_STORAGE_PREFIX + "thread-selected-filters";
 export const SILENT_LOGIN_RETRY_KEY = APP_STORAGE_PREFIX + "silent-login-retry";
+export const OIDC_LOGIN_ATTEMPT_KEY = APP_STORAGE_PREFIX + "oidc-login-attempt";
 export const EXPANDED_FOLDERS_KEY = APP_STORAGE_PREFIX + "expanded-folders";
 
 
