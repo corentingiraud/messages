@@ -1,6 +1,8 @@
 import { Button } from "@gouvfr-lasuite/cunningham-react";
+import { Icon } from "@gouvfr-lasuite/ui-kit";
 import clsx from "clsx";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Slide, ToastContainer, ToastContentProps, toast } from "react-toastify";
 
 export const Toaster = () => {
@@ -28,7 +30,7 @@ export const ToasterItem = ({
   type?: "error" | "info" | "warning";
   actions?: ToastAction[];
 } & Partial<ToastContentProps>) => {
-
+  const { t } = useTranslation();
   const buttonColor = useMemo(() => {
     switch (type) {
       case "error":
@@ -39,6 +41,7 @@ export const ToasterItem = ({
         return "brand";
     }
   }, [type]);
+
   return (
     <div
       className={clsx(
@@ -52,13 +55,13 @@ export const ToasterItem = ({
         {actions.map((action) => (
           <Button
             key={action.label}
-            aria-label={!action.showLabel ? action.label : undefined}
+            aria-label={!action.showLabel === false ? action.label : undefined}
             onClick={action.onClick}
             color={buttonColor}
             variant="tertiary"
             size="small"
-            icon={action.icon && <span className="material-icons">{action.icon}</span>}
-          >{action.showLabel || !action.icon && action.label}</Button>
+            icon={action.icon && <Icon name={action.icon} aria-hidden={true} />}
+          >{(action.showLabel  === true || !action.icon) && action.label}</Button>
         ))}
         {closeButton && (
           <Button
@@ -66,7 +69,8 @@ export const ToasterItem = ({
             color={buttonColor}
             variant="tertiary"
             size="small"
-            icon={<span className="material-icons">close</span>}
+            aria-label={t('Close')}
+            icon={<Icon name="close" />}
           ></Button>
         )}
       </div>
