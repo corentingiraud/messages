@@ -1,3 +1,6 @@
+import { getNativeCsrfToken } from "@/features/native/csrf";
+import { isNativePlatform } from "@/features/native/platform";
+
 export const errorCauses = async (response: Response, data?: unknown) => {
   const errorsBody = (await response.json()) as Record<
     string,
@@ -61,11 +64,16 @@ export const getHeaders = (headers: HeadersInit = {}, isMultipartFormData: boole
 };
 
 /**
-* Retrieves the CSRF token from the document's cookies.
+* Retrieves the CSRF token from the document's cookies, or from the native
+* storage when running in the Capacitor shell (cookies then live in the
+* native HTTP layer and are not exposed through document.cookie).
 *
-* @returns {string|null} The CSRF token if found in the cookies, or null if not present.
+* @returns {string|undefined} The CSRF token if found, or undefined if not present.
 */
 export function getCSRFToken() {
+  if (isNativePlatform()) {
+    return getNativeCsrfToken();
+  }
   return document.cookie
     .split(";")
     .filter((cookie) => cookie.trim().startsWith("csrftoken="))

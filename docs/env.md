@@ -227,6 +227,15 @@ _Those settings are deprecated and will be removed in the future._
 | `LOGOUT_REDIRECT_URL` | `http://localhost:8900` | Post-logout redirect URL | Optional |
 | `ALLOW_LOGOUT_GET_METHOD` | `True` | Allow GET method for logout | Optional |
 
+### Mobile App Authentication (Capacitor)
+
+| Variable | Default | Description | Required |
+|----------|---------|-------------|----------|
+| `MOBILE_AUTH_CALLBACK_SCHEMES` | `[]` | JSON list of deep-link schemes the OIDC callback may redirect to after a mobile-initiated login (e.g. `["stmessagesa"]`). An empty list disables the mobile session handoff. | Optional |
+| `MOBILE_AUTH_TOKEN_TTL` | `60` | Lifetime (seconds) of the one-time token a mobile app exchanges for its session cookie on `/api/v1.0/mobile/auth/exchange/` | Optional |
+
+> **Note**: mobile builds of the frontend must set `NEXT_PUBLIC_API_ORIGIN` explicitly — inside the Capacitor WebView there is no meaningful `window.location.origin` fallback.
+
 ## Security & CORS
 
 | Variable | Default | Description | Required |

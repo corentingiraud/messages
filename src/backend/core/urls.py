@@ -42,6 +42,7 @@ from core.api.viewsets.metrics import (
     MailboxUsageMetricsApiView,
     MailDomainUsersMetricsApiView,
 )
+from core.api.viewsets.mobile_auth import MobileSessionExchangeView
 from core.api.viewsets.placeholder import DraftPlaceholderView, PlaceholderView
 from core.api.viewsets.provisioning import (
     ProvisioningMailboxView,
@@ -228,6 +229,11 @@ urlpatterns = [
         ),
     ),
     path(f"api/{settings.API_VERSION}/config/", ConfigView.as_view()),
+    path(
+        f"api/{settings.API_VERSION}/mobile/auth/exchange/",
+        MobileSessionExchangeView.as_view(),
+        name="mobile-auth-exchange",
+    ),
     path(
         f"api/{settings.API_VERSION}/flag/",
         ChangeFlagView.as_view(),

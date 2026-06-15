@@ -23,12 +23,18 @@
     "prets:check": "npm run routes:generate",
     "ts:check": "tsc --noEmit",
     "i18n:extract": "i18next-cli extract",
-    "analyze": "ANALYZE=1 vite build && node ./scripts/print-bundle-stats.mjs"
+    "analyze": "ANALYZE=1 vite build && node ./scripts/print-bundle-stats.mjs",
+    "mobile:build": "NEXT_PUBLIC_API_ORIGIN=http://localhost:8901 npm run build && npx cap sync",
+    "mobile:android": "npm run mobile:build && npx cap open android",
+    "mobile:ios": "npm run mobile:build && npx cap open ios"
   },
   "dependencies": {
     "@blocknote/core": "0.51.4",
     "@blocknote/mantine": "0.51.4",
     "@blocknote/react": "0.51.4",
+    "@capacitor/app": "8.1.0",
+    "@capacitor/browser": "8.0.3",
+    "@capacitor/core": "8.4.0",
     "@gouvfr-lasuite/cunningham-react": "4.3.0",
     "@gouvfr-lasuite/drive-sdk": "0.0.2",
     "@gouvfr-lasuite/ui-kit": "0.23.2",
@@ -62,6 +68,9 @@
     "zod-from-json-schema": "0.5.2"
   },
   "devDependencies": {
+    "@capacitor/android": "8.4.0",
+    "@capacitor/cli": "8.4.0",
+    "@capacitor/ios": "8.4.0",
     "@tanstack/eslint-plugin-query": "5.91.4",
     "@tanstack/router-cli": "1.167.13",
     "@tanstack/router-plugin": "1.168.11",

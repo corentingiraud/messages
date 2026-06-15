@@ -7,14 +7,24 @@ import { UserWithAbilities } from "../api/gen/models/user_with_abilities";
 import { addToast, ToasterItem } from "../ui/components/toaster";
 import { useTranslation } from "react-i18next";
 import { SESSION_EXPIRED_KEY } from "../config/constants";
+import { nativeLogin, nativeLogout } from "../native/auth";
+import { isNativePlatform } from "../native/platform";
 import { useConfig } from "../providers/config";
 import { attemptSilentLogin, canAttemptSilentLogin } from "./silent-login";
 
 export const logout = () => {
+  if (isNativePlatform()) {
+    void nativeLogout();
+    return;
+  }
   window.location.replace(getRequestUrl("/api/v1.0/logout/"));
 };
 
 export const login = () => {
+  if (isNativePlatform()) {
+    void nativeLogin();
+    return;
+  }
   window.location.replace(getRequestUrl("/api/v1.0/authenticate/"));
 };
 
@@ -51,7 +61,13 @@ export const Auth = ({
     return undefined;
   }, [query.isError, query.error?.code, query.data]);
   const shouldAttemptSilentLogin = useMemo(
-    () => config.FRONTEND_SILENT_LOGIN_ENABLED && user === null && canAttemptSilentLogin(),
+    // On native platforms the WebView must never navigate itself to the
+    // IdP: silent login is replaced by the system-browser flow.
+    () =>
+      !isNativePlatform() &&
+      config.FRONTEND_SILENT_LOGIN_ENABLED &&
+      user === null &&
+      canAttemptSilentLogin(),
     [config.FRONTEND_SILENT_LOGIN_ENABLED, user]
  );
 
