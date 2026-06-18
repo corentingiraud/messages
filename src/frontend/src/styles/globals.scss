@@ -1,14 +1,20 @@
 @use "./utils" as *;
 
 :root {
-  --header-height: 52px;
+  // Top inset of the device safe area (Dynamic Island / notch / status bar).
+  // Resolves to 0 on the web and on non-notched devices; requires the
+  // viewport-fit=cover meta (set in index.html) to be non-zero on iOS.
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  // The bar height folds in the safe area inset so every consumer of
+  // --header-height (content margin-top, calc(100dvh - …) panes) stays aligned.
+  --header-height: calc(52px + var(--safe-area-inset-top));
   --c--components--forms-checkbox--size: 24px;
   --toastify-z-index: 9999999;
 }
 
 @media screen and (max-width: breakpoint(tablet)) {
   :root {
-    --header-height: 104px;
+    --header-height: calc(104px + var(--safe-area-inset-top));
   }
 }
 

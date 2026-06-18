@@ -9,7 +9,10 @@
   height: var(--header-height);
   min-height: var(--header-height);
   max-height: var(--header-height);
-  padding: 0 1.125rem;
+  // Top padding pushes the header content below the Dynamic Island while the
+  // background still spans up to the device top edge. With box-sizing:border-box
+  // the content box keeps its nominal height (52px / 104px).
+  padding: var(--safe-area-inset-top) 1.125rem 0;
 
   &--anonymous {
     border-color: transparent;
@@ -21,7 +24,7 @@
     grid-template-areas:
       "toggle left left"
       "center center center";
-    padding: 0 var(--c--globals--spacings--base);
+    padding: var(--safe-area-inset-top) var(--c--globals--spacings--base) 0;
 
     &__left {
       justify-content: space-between;

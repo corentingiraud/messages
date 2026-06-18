@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Messages</string>
-    <string name="title_activity_main">Messages</string>
+    <!-- app_name and title_activity_main are provided per flavor via resValue
+         (see app/build.gradle productFlavors a/b). -->
     <string name="package_name">fr.gouv.suite.messages.a</string>
     <string name="custom_url_scheme">fr.gouv.suite.messages.a</string>
 </resources>

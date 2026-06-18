@@ -1,14 +1,15 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 /**
- * Two POC variants prove cross-app SSO: variant "a" is the default build,
- * variant "b" (MESSAGES_APP_VARIANT=b) installs side by side with its own
- * appId and deep-link scheme. On Android the appId/scheme of the actual
- * build are driven by the Gradle properties messagesAppId/messagesAuthScheme;
- * on iOS by PRODUCT_BUNDLE_IDENTIFIER (ASWebAuthenticationSession needs no
- * Info.plist scheme declaration).
+ * Two POC variants prove cross-app SSO: they install side by side with their
+ * own appId and deep-link scheme. The shared JS bundle resolves the scheme at
+ * runtime from the appId (see src/features/native/auth.ts SCHEME_BY_APP_ID),
+ * so the appId below only seeds Capacitor defaults: on Android the real appId
+ * and scheme come from the Gradle product flavors a/b (android/app/build.gradle),
+ * on iOS from the App / App B Xcode targets, which differ only by
+ * PRODUCT_BUNDLE_IDENTIFIER and PRODUCT_DISPLAY_NAME (ASWebAuthenticationSession
+ * needs no Info.plist scheme declaration). See docs/mobile-poc.md.
  */
-// const variant = process.env.MESSAGES_APP_VARIANT === "b" ? "b" : "a";
 const variant = "a" as "a" | "b";
 
 const config: CapacitorConfig = {

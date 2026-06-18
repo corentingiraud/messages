@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-82YEwLUn.js";import{$n as t}from"./index-wBmhSUJu.js";import{t as n}from"./main-CwxO3K_d.js";import{r}from"./thread-selection-B_0BWctt.js";var i=e(),a=()=>(0,i.jsx)(n,{children:(0,i.jsx)(r,{children:(0,i.jsx)(t,{})})});export{a as component};
