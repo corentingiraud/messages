@@ -587,12 +587,21 @@ build-front: ## build the frontend locally
 .PHONY: build-front
 
 # Mobile (Capacitor). The web bundle is built in a container (frontend-mobile,
-# which carries the env_file so the NEXT_PUBLIC_* vars are inlined) and copied
-# into the native projects. The native compile / IDE / device steps are macOS-
-# and SDK-bound, so they stay on the host — run them after `make mobile-build`.
-mobile-build: ## build the mobile web bundle and copy it into the native projects (container, env-aware)
+# which carries the env_file so the NEXT_PUBLIC_* vars are inlined) and synced
+# into the native projects. The sync (not a bare copy) also regenerates the
+# gitignored capacitor-cordova-android-plugins/ scaffolding that Gradle needs,
+# so always run `make mobile-build` after a fresh checkout. The native compile /
+# IDE / device steps are macOS- and SDK-bound, so they stay on the host.
+mobile-build: ## build the web bundle and sync it + native plugins into the projects (container, env-aware)
 	@$(COMPOSE) run --rm --build frontend-mobile npm run mobile:build
 .PHONY: mobile-build
+
+# Regenerate the native app icons and splashscreens from src/frontend/assets/
+# (icon-only/icon-foreground/logo PNGs). Idempotent; run it after changing the
+# source assets, then commit the regenerated android/ and ios/ resources.
+mobile-assets: ## (re)generate native app icons & splashscreens (container)
+	@$(COMPOSE) run --rm --build frontend-mobile npm run mobile:assets
+.PHONY: mobile-assets
 
 mobile-android: mobile-build ## build the bundle (container) then open the Android project in Android Studio (host)
 	@if command -v studio.sh >/dev/null 2>&1; then studio.sh src/frontend/android; \

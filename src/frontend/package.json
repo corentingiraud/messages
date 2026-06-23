@@ -24,7 +24,8 @@
     "ts:check": "tsc --noEmit",
     "i18n:extract": "i18next-cli extract",
     "analyze": "ANALYZE=1 vite build && node ./scripts/print-bundle-stats.mjs",
-    "mobile:build": "npm run build && npx cap copy",
+    "mobile:build": "npm run build && npx cap sync",
+    "mobile:assets": "capacitor-assets generate --ios --android --iconBackgroundColor '#ffffff' --iconBackgroundColorDark '#ffffff' --splashBackgroundColor '#ffffff' --splashBackgroundColorDark '#ffffff'",
     "android:reverse": "adb reverse tcp:8901 tcp:8901 && adb reverse tcp:8902 tcp:8902 && adb reverse tcp:8900 tcp:8900",
     "android:apk:a": "cd android && ./gradlew assembleADebug",
     "android:apk:b": "cd android && ./gradlew assembleBDebug",
@@ -73,6 +74,7 @@
   },
   "devDependencies": {
     "@capacitor/android": "8.4.0",
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "8.4.0",
     "@capacitor/ios": "8.4.0",
     "@tanstack/eslint-plugin-query": "5.91.4",
