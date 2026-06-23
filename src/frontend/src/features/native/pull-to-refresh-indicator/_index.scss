@@ -1,0 +1,24 @@
+.pull-to-refresh {
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &__spinner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--c--globals--spacings--xs);
+
+        & > .c__spinner {
+            flex-shrink: 0;
+        }
+
+        // While pulling (before the refresh fires) the spinner is frozen on its
+        // base frame; only opacity reacts to the pull distance.
+        &--static > .c__spinner {
+            animation: none;
+        }
+    }
+}

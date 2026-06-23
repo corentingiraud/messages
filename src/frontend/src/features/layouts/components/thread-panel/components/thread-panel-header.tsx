@@ -4,7 +4,7 @@ import { useLabelsList } from "@/features/api/gen";
 import type { TreeLabel } from "@/features/api/gen/models";
 import { useMailboxContext } from "@/features/providers/mailbox";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Tooltip, Checkbox } from "@gouvfr-lasuite/cunningham-react";
 import useRead from "@/features/message/use-read";
 import { DropdownMenu, Icon, IconType, VerticalSeparator } from "@gouvfr-lasuite/ui-kit";
@@ -32,9 +32,15 @@ type ThreadPanelTitleProps = {
     onClearSelection: () => void;
     onEnableSelectionMode: () => void;
     onDisableSelectionMode: () => void;
+    isRefreshing?: boolean;
+    refreshFeedback?: string | null;
+    onClearRefreshFeedback?: () => void;
 }
 
-const ThreadPanelTitle = ({ selectedThreadIds, isAllSelected, isSomeSelected, isSelectionMode, selectionReadStatus, selectionStarredStatus, onSelectAll, onClearSelection, onEnableSelectionMode, onDisableSelectionMode }: ThreadPanelTitleProps) => {
+/** How long the pull-to-refresh feedback replaces the message count. */
+const REFRESH_FEEDBACK_DURATION_MS = 4000;
+
+const ThreadPanelTitle = ({ selectedThreadIds, isAllSelected, isSomeSelected, isSelectionMode, selectionReadStatus, selectionStarredStatus, onSelectAll, onClearSelection, onEnableSelectionMode, onDisableSelectionMode, isRefreshing, refreshFeedback, onClearRefreshFeedback }: ThreadPanelTitleProps) => {
     const { t } = useTranslation();
     const { markAsReadAt } = useRead();
     const { markAsArchived, markAsUnarchived } = useArchive();
@@ -180,6 +186,21 @@ const ThreadPanelTitle = ({ selectedThreadIds, isAllSelected, isSomeSelected, is
         }
     }, [activeFilters, isSearch, threads?.count, t]);
 
+    // Surface the pull-to-refresh result in place of the count for a moment,
+    // then revert to the count once the feedback has been seen.
+    useEffect(() => {
+        if (!refreshFeedback) return;
+        const timeoutId = window.setTimeout(
+            () => onClearRefreshFeedback?.(),
+            REFRESH_FEEDBACK_DURATION_MS,
+        );
+        return () => window.clearTimeout(timeoutId);
+    }, [refreshFeedback, onClearRefreshFeedback]);
+
+    const detailsLabel = isRefreshing
+        ? t('Fetching mail…')
+        : refreshFeedback ?? countLabel;
+
     return (
         <header className="thread-panel__header">
             <div className="thread-panel__header--title-row">
@@ -196,8 +217,8 @@ const ThreadPanelTitle = ({ selectedThreadIds, isAllSelected, isSomeSelected, is
                         className="thread-panel__header--checkbox"
                     />
                 )}
-                <p className="thread-panel__header--count" title={countLabel}>
-                    {countLabel}
+                <p className="thread-panel__header--count" title={detailsLabel}>
+                    {detailsLabel}
                 </p>
                 <div className="thread-panel__bar">
                     <Tooltip content={mainReadTooltip}>

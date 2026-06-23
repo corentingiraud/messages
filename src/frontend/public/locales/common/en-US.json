@@ -400,6 +400,7 @@
   "Failed to update signature.": "Failed to update signature.",
   "Failed: {{count}} messages_one": "Failed: {{count}} messagema",
   "Failed: {{count}} messages_other": "Failed: {{count}} messages",
+  "Fetching mail…": "Fetching mail…",
   "Filter by: {{filters}}": "Filter by: {{filters}}",
   "Filter threads": "Filter threads",
   "First name": "First name",

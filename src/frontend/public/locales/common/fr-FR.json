@@ -477,6 +477,7 @@
   "Failed: {{count}} messages_one": "Échoué : {{count}} message",
   "Failed: {{count}} messages_many": "Échoué : {{count}} messages",
   "Failed: {{count}} messages_other": "Échoué : {{count}} messages",
+  "Fetching mail…": "Relève du courrier…",
   "Filter by: {{filters}}": "Filtrer par : {{filters}}",
   "Filter threads": "Filtrer les conversations",
   "First name": "Prénom",

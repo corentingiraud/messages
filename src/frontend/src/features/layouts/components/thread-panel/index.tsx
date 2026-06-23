@@ -11,9 +11,15 @@ import { useThreadSelection } from "@/features/providers/thread-selection";
 import { useScrollRestore } from "@/features/providers/scroll-restore";
 import { useThreadPanelFilters } from "./hooks/use-thread-panel-filters";
 import { useThreadListbox } from "./hooks/use-thread-listbox";
+import { isNativePlatform } from "@/features/native/platform";
+import { usePullToRefresh } from "@/features/native/use-pull-to-refresh";
+import { PullToRefreshIndicator } from "@/features/native/pull-to-refresh-indicator";
+import { useRefreshFeedback } from "@/hooks/use-refresh-feedback";
+
+const PULL_TO_REFRESH_THRESHOLD = 70;
 
 export const ThreadPanel = () => {
-    const { threads, queryStates, unselectThread, loadNextThreads, selectedThread, selectedMailbox } = useMailboxContext();
+    const { threads, queryStates, unselectThread, loadNextThreads, selectedThread, selectedMailbox, invalidateMailbox } = useMailboxContext();
     const searchParams = useUrlSearchParams();
     const isSearch = searchParams.has('search');
     const { hasActiveFilters, clearFilters } = useThreadPanelFilters();
@@ -39,6 +45,21 @@ export const ThreadPanel = () => {
     } = useThreadSelection();
 
     const { getItemProps, onKeyDown: handleListboxKeyDown, onBlur: handleListboxBlur } = useThreadListbox(threads?.results);
+
+    const isNative = isNativePlatform();
+    const { isRefreshing: isMailboxRefreshing, feedback: refreshFeedback, clearFeedback, refresh } = useRefreshFeedback();
+    const { containerRef: pullToRefreshRef, pullDistance, isRefreshing: isPullRefreshing, isActive: isPulling } = usePullToRefresh({
+        onRefresh: () => refresh(invalidateMailbox),
+        enabled: isNative,
+        threshold: PULL_TO_REFRESH_THRESHOLD,
+    });
+
+    // Single node feeding both the scroll-restore ref object and the
+    // pull-to-refresh callback ref.
+    const setThreadsListNode = useCallback((node: HTMLDivElement | null) => {
+        scrollContainerRef.current = node;
+        pullToRefreshRef(node);
+    }, [scrollContainerRef, pullToRefreshRef]);
 
     const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
         const target = entries[0];
@@ -107,6 +128,9 @@ export const ThreadPanel = () => {
                 onClearSelection={clearSelection}
                 onEnableSelectionMode={enableSelectionMode}
                 onDisableSelectionMode={clearSelection}
+                isRefreshing={isMailboxRefreshing}
+                refreshFeedback={refreshFeedback}
+                onClearRefreshFeedback={clearFeedback}
             />
             {isEmpty ? (
                 <div className="thread-panel__empty">
@@ -118,16 +142,25 @@ export const ThreadPanel = () => {
                     </div>
                 </div>
             ) : (
-                <div
-                    className="thread-panel__threads_list"
-                    ref={scrollContainerRef}
-                    onScroll={handleScroll}
-                    role="listbox"
-                    aria-multiselectable="true"
-                    aria-label={t('Thread list')}
-                    onKeyDown={handleListboxKeyDown}
-                    onBlur={handleListboxBlur}
-                >
+                <>
+                    {isNative && (
+                        <PullToRefreshIndicator
+                            pullDistance={pullDistance}
+                            isRefreshing={isPullRefreshing}
+                            isActive={isPulling}
+                            threshold={PULL_TO_REFRESH_THRESHOLD}
+                        />
+                    )}
+                    <div
+                        className="thread-panel__threads_list"
+                        ref={setThreadsListNode}
+                        onScroll={handleScroll}
+                        role="listbox"
+                        aria-multiselectable="true"
+                        aria-label={t('Thread list')}
+                        onKeyDown={handleListboxKeyDown}
+                        onBlur={handleListboxBlur}
+                    >
                     {threads?.results.map((thread) => (
                         <ThreadItem
                             key={thread.id}
@@ -150,7 +183,8 @@ export const ThreadPanel = () => {
                             )}
                         </div>
                     )}
-                </div>
+                    </div>
+                </>
             )}
         </div>
     );
