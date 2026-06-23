@@ -38,6 +38,8 @@
     "@blocknote/mantine": "0.51.4",
     "@blocknote/react": "0.51.4",
     "@capacitor/app": "8.1.0",
+    "@capacitor/filesystem": "8.1.2",
+    "@capacitor/share": "8.0.1",
     "@capacitor/browser": "8.0.3",
     "@capacitor/core": "8.4.0",
     "@gouvfr-lasuite/cunningham-react": "4.3.0",

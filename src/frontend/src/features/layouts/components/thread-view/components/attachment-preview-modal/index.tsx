@@ -4,6 +4,8 @@ import { useAttachmentPreview } from "@/features/providers/attachment-preview";
 import { useMailboxContext } from "@/features/providers/mailbox";
 import { useConfig } from "@/features/providers/config";
 import { AttachmentHelper } from "@/features/utils/attachment-helper";
+import { isNativePlatform } from "@/features/native/platform";
+import { nativeDownloadFile } from "@/features/native/download";
 import MailHelper from "@/features/utils/mail-helper";
 import type { Attachment, Message } from "@/features/api/gen/models";
 import type { DriveFile } from "@/features/forms/components/message-form/drive-attachment-picker";
@@ -148,6 +150,12 @@ export const AttachmentPreviewModal = () => {
         const driveUrl = getDriveUrl(file.id);
         if (driveUrl) {
             window.open(driveUrl, "_blank", "noopener,noreferrer");
+            return;
+        }
+        // Native shell: navigating to the blob URL escapes to the system
+        // browser (no session → 401), so fetch through the native HTTP layer.
+        if (isNativePlatform()) {
+            nativeDownloadFile(file.url, file.title);
             return;
         }
         window.location.href = file.url;

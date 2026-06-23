@@ -79,6 +79,10 @@ class MobileSessionExchangeView(APIView):
         http_request = request._request  # noqa: SLF001
         http_request.session = session
         http_request.session.modified = True
+        # With CSRF_USE_SESSIONS this stores the CSRF secret in the session and
+        # returns the token the app echoes in the X-CSRFToken header; the native
+        # HTTP jar replays the session cookie, so the check validates server-side
+        # without depending on a csrf cookie the jar would not resend.
         csrf_token = get_token(http_request)
 
         return Response({"csrf_token": csrf_token})

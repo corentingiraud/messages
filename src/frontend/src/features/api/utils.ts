@@ -1,5 +1,6 @@
 import { getNativeCsrfToken } from "@/features/native/csrf";
 import { isNativePlatform } from "@/features/native/platform";
+import { getWebCsrfToken } from "./csrf";
 
 export const errorCauses = async (response: Response, data?: unknown) => {
   const errorsBody = (await response.json()) as Record<
@@ -64,19 +65,18 @@ export const getHeaders = (headers: HeadersInit = {}, isMultipartFormData: boole
 };
 
 /**
-* Retrieves the CSRF token from the document's cookies, or from the native
-* storage when running in the Capacitor shell (cookies then live in the
-* native HTTP layer and are not exposed through document.cookie).
+* Retrieves the CSRF token to echo in the X-CSRFToken header.
 *
-* @returns {string|undefined} The CSRF token if found, or undefined if not present.
+* With CSRF_USE_SESSIONS the secret lives in the server-side session and there
+* is no readable `csrftoken` cookie: the token is delivered over an
+* authenticated channel and cached in memory — `/users/me/` for the web app,
+* the session exchange for the Capacitor shell.
+*
+* @returns {string|undefined} The CSRF token if known, or undefined otherwise.
 */
 export function getCSRFToken() {
   if (isNativePlatform()) {
     return getNativeCsrfToken();
   }
-  return document.cookie
-    .split(";")
-    .filter((cookie) => cookie.trim().startsWith("csrftoken="))
-    .map((cookie) => cookie.split("=")[1])
-    .pop();
+  return getWebCsrfToken();
 }

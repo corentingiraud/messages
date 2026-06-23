@@ -4,6 +4,8 @@ import { Icon, Spinner } from "@gouvfr-lasuite/ui-kit";
 import clsx from "clsx";
 import { Attachment } from "@/features/api/gen/models"
 import { AttachmentHelper } from "@/features/utils/attachment-helper";
+import { isNativePlatform } from "@/features/native/platform";
+import { nativeDownloadFile } from "@/features/native/download";
 import { DriveIcon } from "@/features/forms/components/message-form/drive-icon";
 import { DriveFile } from "@/features/forms/components/message-form/drive-attachment-picker";
 import { DriveUploadButton } from "./drive-upload-button";
@@ -61,6 +63,14 @@ export const AttachmentItem = ({ attachment, isLoading = false, canDownload = tr
     const triggerPreview = () => {
         if (!isPreviewable || !previewableId) return;
         (onPreview ?? openPreview)(previewableId);
+    };
+
+    // In the native shell an <a download> escapes to the system browser (no
+    // session → 401). For real attachments (blobs) fetch through the native
+    // HTTP layer instead; Drive files keep their cross-origin permalink.
+    const useNativeDownload = isNativePlatform() && isAttachment(attachment);
+    const triggerNativeDownload = () => {
+        if (downloadUrl) nativeDownloadFile(downloadUrl, attachment.name);
     };
 
     return (
@@ -134,8 +144,9 @@ export const AttachmentItem = ({ attachment, isLoading = false, canDownload = tr
                                         icon={<Icon name="download" />}
                                         color={variant === "error" ? "error" : "brand"}
                                         variant="tertiary"
-                                        href={downloadUrl}
-                                        download={attachment.name}
+                                        {...(useNativeDownload
+                                            ? { onClick: triggerNativeDownload }
+                                            : { href: downloadUrl, download: attachment.name })}
                                     />
                                     {isAttachment(attachment) && <DriveUploadButton attachment={attachment} />}
                                 </>

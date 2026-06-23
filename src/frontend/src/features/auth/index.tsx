@@ -1,6 +1,7 @@
 import React, { PropsWithChildren, useEffect, useMemo } from "react";
 
 import { getRequestUrl } from "@/features/api/utils";
+import { setWebCsrfToken } from "@/features/api/csrf";
 import { useUsersMeRetrieve } from "@/features/api/gen/users/users";
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
 import { UserWithAbilities } from "../api/gen/models/user_with_abilities";
@@ -70,6 +71,15 @@ export const Auth = ({
       canAttemptSilentLogin(),
     [config.FRONTEND_SILENT_LOGIN_ENABLED, user]
  );
+
+  // Cache the session-bound CSRF token delivered with /users/me/ so mutations
+  // can echo it in the X-CSRFToken header (no `csrftoken` cookie any more under
+  // CSRF_USE_SESSIONS). The native shell uses its own token from the session
+  // exchange, so it is skipped here.
+  useEffect(() => {
+    if (isNativePlatform()) return;
+    if (user) setWebCsrfToken(user.csrf_token);
+  }, [user]);
 
   useEffect(() => {
     if (user !== null) return;
