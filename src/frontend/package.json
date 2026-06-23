@@ -24,15 +24,13 @@
     "ts:check": "tsc --noEmit",
     "i18n:extract": "i18next-cli extract",
     "analyze": "ANALYZE=1 vite build && node ./scripts/print-bundle-stats.mjs",
-    "mobile:build": "NEXT_PUBLIC_API_ORIGIN=http://localhost:8901 npm run build && npx cap sync",
-    "mobile:android": "npm run mobile:build && npx cap open android",
-    "mobile:ios": "npm run mobile:build && npx cap open ios",
+    "mobile:build": "npm run build && npx cap copy",
     "android:reverse": "adb reverse tcp:8901 tcp:8901 && adb reverse tcp:8902 tcp:8902 && adb reverse tcp:8900 tcp:8900",
     "android:apk:a": "cd android && ./gradlew assembleADebug",
     "android:apk:b": "cd android && ./gradlew assembleBDebug",
     "android:install:a": "adb install -r android/app/build/outputs/apk/a/debug/app-a-debug.apk",
     "android:install:b": "adb install -r android/app/build/outputs/apk/b/debug/app-b-debug.apk",
-    "mobile:android:sso": "npm run mobile:build && npm run android:apk:a && npm run android:apk:b && npm run android:install:a && npm run android:install:b && npm run android:reverse"
+    "android:sso": "npm run android:apk:a && npm run android:apk:b && npm run android:install:a && npm run android:install:b && npm run android:reverse"
   },
   "dependencies": {
     "@blocknote/core": "0.51.4",

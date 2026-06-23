@@ -24,7 +24,7 @@ BLUE := \033[1;34m
 DOCKER_UID          = $(shell id -u)
 DOCKER_GID          = $(shell id -g)
 DOCKER_USER         = $(DOCKER_UID):$(DOCKER_GID)
-COMPOSE             = DOCKER_USER=$(DOCKER_USER) docker compose
+COMPOSE             = DOCKER_USER=$(DOCKER_USER) DOCKER_UID=$(DOCKER_UID) docker compose
 COMPOSE_E2E         = DOCKER_USER=$(DOCKER_USER) docker compose -f src/e2e/compose.yaml
 COMPOSE_EXEC        = $(COMPOSE) exec
 COMPOSE_EXEC_APP    = $(COMPOSE_EXEC) backend-dev
@@ -585,6 +585,29 @@ install-frozen-front-amd64: ## install the frontend locally, following the froze
 build-front: ## build the frontend locally
 	@$(COMPOSE) run --rm --build frontend-tools npm run build
 .PHONY: build-front
+
+# Mobile (Capacitor). The web bundle is built in a container (frontend-mobile,
+# which carries the env_file so the NEXT_PUBLIC_* vars are inlined) and copied
+# into the native projects. The native compile / IDE / device steps are macOS-
+# and SDK-bound, so they stay on the host — run them after `make mobile-build`.
+mobile-build: ## build the mobile web bundle and copy it into the native projects (container, env-aware)
+	@$(COMPOSE) run --rm --build frontend-mobile npm run mobile:build
+.PHONY: mobile-build
+
+mobile-android: mobile-build ## build the bundle (container) then open the Android project in Android Studio (host)
+	@if command -v studio.sh >/dev/null 2>&1; then studio.sh src/frontend/android; \
+	elif command -v android-studio >/dev/null 2>&1; then android-studio src/frontend/android; \
+	elif [ "$$(uname)" = "Darwin" ]; then open -a "Android Studio" src/frontend/android; \
+	else echo "Android Studio introuvable : ouvre src/frontend/android manuellement." && exit 1; fi
+.PHONY: mobile-android
+
+mobile-ios: mobile-build ## build the bundle (container) then open the iOS project in Xcode (host, macOS)
+	@open src/frontend/ios/App/App.xcodeproj
+.PHONY: mobile-ios
+
+mobile-android-sso: mobile-build ## build the bundle (container) then build+install both SSO APK variants and adb reverse (host)
+	@cd src/frontend && npm run android:sso
+.PHONY: mobile-android-sso
 
 i18n-generate-front: ## Extract the frontend translation inside a json to be used for crowdin
 	@$(COMPOSE) run --rm --build frontend-tools npm run i18n:extract

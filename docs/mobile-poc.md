@@ -89,21 +89,26 @@ Start an emulator first (image **with Play services** — Custom Tabs needs
 Chrome), then:
 
 ```bash
-cd src/frontend
-npm run mobile:android:sso      # web build + sync, both APKs, install both, adb reverse
+make mobile-android-sso         # web build (container) + both APKs, install both, adb reverse
 ```
 
 ### Step by step (equivalent)
 
 ```bash
+make mobile-build               # container: vite build (env from env.d) + cap copy
 cd src/frontend
-npm run mobile:build            # vite build (API origin = localhost:8901) + cap sync
-npm run android:apk:a           # assembleADebug → app-a-debug.apk
-npm run android:apk:b           # assembleBDebug → app-b-debug.apk
-npm run android:install:a       # adb install -r … app-a-debug.apk
-npm run android:install:b       # adb install -r … app-b-debug.apk
+npm run android:apk:a           # assembleADebug → app-a-debug.apk            (host)
+npm run android:apk:b           # assembleBDebug → app-b-debug.apk            (host)
+npm run android:install:a       # adb install -r … app-a-debug.apk            (host)
+npm run android:install:b       # adb install -r … app-b-debug.apk            (host)
 npm run android:reverse         # map emulator localhost → host (8900/8901/8902)
 ```
+
+> The web bundle is built **inside a container** (`frontend-mobile`) so it picks
+> up the `NEXT_PUBLIC_*` vars from `env.d/development/frontend.{defaults,local}`
+> — exactly like the dev server. Building it on the host with a bare `npm run`
+> would inline none of them (Vite has no `.env` file here). The native compile,
+> `adb` and the IDE stay on the host.
 
 > `adb reverse` is dropped on every emulator reboot or adb reconnection — rerun
 > `npm run android:reverse` if the apps suddenly cannot reach the backend.
@@ -187,7 +192,7 @@ same way once the adb connection is up.
 iOS mirrors the Android two-flavors setup with **two targets in the single
 `App.xcodeproj`** (no duplicated project): `App` (`…messages.a`, "Messages") and
 `App B` (`…messages.b`, "Messages B"). Both targets share the same Swift
-sources, the same `App/public` web bundle (so `cap sync` feeds both) and the
+sources, the same `App/public` web bundle (so `cap copy` feeds both) and the
 same `Info.plist`; they differ only by two build settings:
 
 | Setting                       | App                        | App B                        |
@@ -201,8 +206,7 @@ resolves the deep-link scheme at runtime from the bundle id
 (`SCHEME_BY_APP_ID`). So a target is all that differs.
 
 ```bash
-cd src/frontend
-npm run mobile:ios              # build + sync + open Xcode
+make mobile-ios                 # web build (container) + cap copy, then open Xcode (host)
 ```
 
 Then run the `App` scheme, and the `App B` scheme, on the **same** simulator
