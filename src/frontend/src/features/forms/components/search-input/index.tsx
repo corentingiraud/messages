@@ -2,11 +2,13 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useUrlSearchParams } from "@/hooks/use-url-search-params";
 import { useEffect, useState, useRef } from "react";
-import { Button } from "@gouvfr-lasuite/cunningham-react";
+import { Button, Modal, ModalSize } from "@gouvfr-lasuite/cunningham-react";
 import { SearchFiltersForm } from "../search-filters-form";
 import { useLayoutContext } from "@/features/layouts/components/layout-context";
 import { MAILBOX_FOLDERS } from "@/features/layouts/components/mailbox-panel/components/mailbox-list";
-import { Icon } from "@gouvfr-lasuite/ui-kit";
+import { Icon, useResponsive } from "@gouvfr-lasuite/ui-kit";
+
+const SEARCH_FILTERS_FORM_ID = "search-filters-form";
 
 export const SearchInput = () => {
     const navigate = useNavigate();
@@ -16,6 +18,7 @@ export const SearchInput = () => {
     const [value, setValue] = useState<string>(searchParams.get('search') || '');
     const [showFilters, setShowFilters] = useState<boolean>(false);
     const { t } = useTranslation();
+    const { isMobile } = useResponsive();
     const searchRef = useRef<HTMLDivElement>(null);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,8 +65,10 @@ export const SearchInput = () => {
         setValue(searchParams.get('search') || '');
     }, [searchParams]);
 
-    // Add click outside handler
+    // Add click outside handler (desktop only: the mobile fullscreen modal
+    // handles its own dismissal and renders outside searchRef).
     useEffect(() => {
+        if (isMobile) return;
         const handleClickOutside = (event: MouseEvent) => {
             if (!searchRef.current?.contains(event.target as Node)) {
                 setShowFilters(false);
@@ -74,7 +79,7 @@ export const SearchInput = () => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, []);
+    }, [isMobile]);
 
     return (
         <div className="search" ref={searchRef}>
@@ -91,11 +96,13 @@ export const SearchInput = () => {
                         value={value}
                         onChange={handleChange}
                         onFocus={() => setShowFilters(true)}
+                        onClick={isMobile ? () => setShowFilters(true) : undefined}
                         onKeyDown={handleKeyPress}
                         placeholder={t("Search in messages...")}
+                        readOnly={isMobile}
                     />
                 </div>
-                { value && (
+                {!isMobile && value && (
                 <Button
                     color="neutral"
                     variant="tertiary"
@@ -107,6 +114,7 @@ export const SearchInput = () => {
                     <span className="c__offscreen">{t("Reset")}</span>
                 </Button>
                 )}
+                {!isMobile && (
                 <Button
                     color="neutral"
                     variant="tertiary"
@@ -117,8 +125,39 @@ export const SearchInput = () => {
                     <Icon name="tune" />
                     <span className="c__offscreen">{showFilters ? t("Close filters") : t("Open filters")}</span>
                 </Button>
+                )}
             </div>
-            {showFilters && <SearchFiltersForm query={value} onChange={handleFiltersChange} />}
+            {isMobile ? (
+                <Modal
+                    isOpen={showFilters}
+                    onClose={() => setShowFilters(false)}
+                    title={t("Search in messages...")}
+                    size={ModalSize.FULL}
+                    stickyFooter
+                    rightActions={
+                        <div className="flex-row flex-justify-end">
+                            <Button type="reset" form={SEARCH_FILTERS_FORM_ID} variant="tertiary">
+                                {t("Reset")}
+                            </Button>
+                            <Button type="submit" form={SEARCH_FILTERS_FORM_ID} variant="primary">
+                                {t("Search")}
+                            </Button>
+                        </div>
+                    }
+                >
+                    {showFilters && (
+                        <SearchFiltersForm
+                            id={SEARCH_FILTERS_FORM_ID}
+                            query={value}
+                            onChange={handleFiltersChange}
+                            autoFocusText
+                            hideFooter
+                        />
+                    )}
+                </Modal>
+            ) : (
+                showFilters && <SearchFiltersForm query={value} onChange={handleFiltersChange} />
+            )}
         </div>
     );
 }

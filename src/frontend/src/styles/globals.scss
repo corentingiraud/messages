@@ -4,10 +4,10 @@
   // Top inset of the device safe area (Dynamic Island / notch / status bar).
   // Resolves to 0 on the web and on non-notched devices; requires the
   // viewport-fit=cover meta (set in index.html) to be non-zero on iOS.
-  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-top: env(safe-area-inset-top, var(--c--globals--spacings--2xs));
   // Bottom inset of the device safe area (home indicator / gesture bar).
   // Floating bottom bars fold it into their padding so they clear the system UI.
-  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, var(--c--globals--spacings--2xs));
   --c--components--forms-checkbox--size: 24px;
   --toastify-z-index: 9999999;
 }
