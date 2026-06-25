@@ -1,28 +1,15 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Button } from "@gouvfr-lasuite/cunningham-react";
-import { useMailboxContext } from "@/features/providers/mailbox";
-import { useLayoutContext } from "@/features/layouts/components/layout-context";
-import useAbility, { Abilities } from "@/hooks/use-ability";
 import { useRefreshFeedback } from "@/hooks/use-refresh-feedback";
+import { useComposeMessage } from "@/features/message/use-compose-message";
 import { Icon, IconType } from "@gouvfr-lasuite/ui-kit";
 import { TransientTooltip } from "@/features/ui/components/transient-tooltip";
 import clsx from "clsx";
 
 export const MailboxPanelActions = () => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
-    const { selectedMailbox } = useMailboxContext();
-    const { closeLeftPanel } = useLayoutContext();
-    const canWriteMessages = useAbility(Abilities.CAN_WRITE_MESSAGES, selectedMailbox);
+    const { canWriteMessages, goToNewMessage, selectedMailbox } = useComposeMessage();
     const { isRefreshing, feedback, clearFeedback, refresh } = useRefreshFeedback();
-
-    const goToNewMessageForm = (event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
-        event.preventDefault();
-        if (!canWriteMessages) return;
-        closeLeftPanel();
-        navigate({ to: '/mailbox/$mailboxId/new', params: { mailboxId: selectedMailbox!.id } });
-    };
 
     if (!selectedMailbox) return null;
 
@@ -30,7 +17,7 @@ export const MailboxPanelActions = () => {
         <div className="mailbox-panel-actions">
             <div>
                 <Button
-                    onClick={goToNewMessageForm}
+                    onClick={goToNewMessage}
                     href={`/mailbox/${selectedMailbox.id}/new`}
                     icon={<Icon name="edit_note" type={IconType.OUTLINED} aria-hidden="true" />}
                     disabled={!canWriteMessages}

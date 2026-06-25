@@ -7,6 +7,14 @@ import { createRoot } from "react-dom/client";
 import { createRouter, parseSearchWith, RouterProvider, stringifySearchWith } from "@tanstack/react-router";
 
 import { routeTree } from "./routes.gen";
+import { isNativePlatform } from "./features/native/platform";
+
+// Tag the document on the Capacitor native app so the stylesheet can opt into
+// mobile-only chrome (compact header, floating bottom bars) without each
+// component re-deriving the platform.
+if (isNativePlatform()) {
+  document.documentElement.classList.add("native");
+}
 
 // Default TSR encoding JSON-wraps every search value (`?key=1` → `?key=%221%22`).
 // The rest of the app builds URLs via `URLSearchParams.toString()` and the

@@ -6,16 +6,30 @@
   grid-template-areas: "left center right";
   background-color: var(--c--contextuals--background--surface--secondary);
   border-bottom: 1px solid var(--c--contextuals--border--surface--primary);
-  height: var(--header-height);
-  min-height: var(--header-height);
-  max-height: var(--header-height);
-  // Top padding pushes the header content below the Dynamic Island while the
-  // background still spans up to the device top edge. With box-sizing:border-box
-  // the content box keeps its nominal height (52px / 104px).
-  padding: var(--safe-area-inset-top) 1.125rem 0;
+  // No fixed height: the header sizes to its content + block padding, so the
+  // flex column can split 100dvh between header and content without a
+  // hardcoded offset. The block padding (2xs) lands the single-row header at
+  // ~52px around the 40px logo. The top safe-area inset keeps content below
+  // the Dynamic Island while the background still spans to the device edge.
+  padding: calc(var(--safe-area-inset-top) + var(--c--globals--spacings--2xs)) 1.125rem var(--c--globals--spacings--2xs);
+  height: inherit;
+  min-height: inherit;
+  max-height: inherit;
 
   &--anonymous {
     border-color: transparent;
+  }
+
+  // On the native app the search lives in the bottom bar, so the header drops
+  // the second (search) row that the mobile grid would otherwise reserve and
+  // stays a single ~52px row.
+  :root.native & {
+    grid-template-rows: 1fr;
+    grid-template-areas: "toggle left right";
+
+    .c__header__center {
+      display: none;
+    }
   }
 
   @media screen and (max-width: breakpoint(tablet)) {
@@ -24,14 +38,14 @@
     grid-template-areas:
       "toggle left left"
       "center center center";
-    padding: var(--safe-area-inset-top) var(--c--globals--spacings--base) 0;
+    padding: calc(var(--safe-area-inset-top) + var(--c--globals--spacings--2xs)) var(--c--globals--spacings--base) var(--c--globals--spacings--2xs);
 
     &__left {
       justify-content: space-between;
     }
 
     &__center {
-      padding-bottom: var(--c--globals--spacings--sm);
+      padding-bottom: var(--c--globals--spacings--2xs);
     }
 
 

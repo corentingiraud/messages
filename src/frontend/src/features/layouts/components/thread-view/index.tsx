@@ -22,6 +22,7 @@ import clsx from "clsx";
 import ThreadViewProvider, { useThreadViewContext } from "./provider";
 import useSpam from "@/features/message/use-spam";
 import ViewHelper from "@/features/utils/view-helper";
+import { MobileThreadToolbar } from "@/features/layouts/components/mobile/thread-toolbar";
 
 /**
  * Fallback height (px) used when measuring the sticky header before the
@@ -429,6 +430,11 @@ const ThreadViewComponent = ({ threadItems, mailboxId, thread, showTrashedMessag
                     containerRef={rootRef}
                 />
             )}
+            <MobileThreadToolbar
+                thread={thread}
+                isArchived={isThreadArchived}
+                isTrashed={isThreadTrashed}
+            />
         </div>
     )
 }

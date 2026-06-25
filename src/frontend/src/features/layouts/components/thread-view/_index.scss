@@ -43,16 +43,8 @@
 }
 
 @media screen and (max-width: breakpoint(mobile)) {
-    .thread-view {
-        position: fixed;
-        top: var(--header-height);
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 900;
-        height: auto;
-    }
-
+    // The thread view fills its panel in normal flow (the thread route renders
+    // it full-width on mobile), so no fixed overlay / header offset is needed.
     .thread-view--talk .thread-message:not(.thread-message--sender),
     .thread-view--talk .thread-message.thread-message--sender {
         margin-inline: 0;

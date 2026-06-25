@@ -274,6 +274,18 @@ export const ThreadMessage = forwardRef<HTMLSpanElement, ThreadMessageProps>(
             }
         }, [showReplyForm, threadViewContext.isReady, previousReplyFormMode]);
 
+        // Open the reply form when the mobile toolbar requests it. Only the
+        // latest message owns the reply affordance; the initial render is
+        // skipped so switching threads (the counter is shared) doesn't auto-open.
+        const replyRequestSeen = useRef(threadViewContext.replyRequest);
+        useEffect(() => {
+            if (threadViewContext.replyRequest === replyRequestSeen.current) return;
+            replyRequestSeen.current = threadViewContext.replyRequest;
+            if (isLatest && canSendMessages && canEditThread && !message.is_draft && !message.is_trashed && !draftMessage) {
+                setReplyFormMode('reply');
+            }
+        }, [threadViewContext.replyRequest, isLatest, canSendMessages, canEditThread, message.is_draft, message.is_trashed, draftMessage]);
+
         useEffect(() => {
             if (isThreadMessageBodyLoaded && !queryStates.messages.isFetching) {
                 threadViewContext.setMessageReadiness(message.id, true);

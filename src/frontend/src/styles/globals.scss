@@ -5,17 +5,58 @@
   // Resolves to 0 on the web and on non-notched devices; requires the
   // viewport-fit=cover meta (set in index.html) to be non-zero on iOS.
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
-  // The bar height folds in the safe area inset so every consumer of
-  // --header-height (content margin-top, calc(100dvh - …) panes) stays aligned.
-  --header-height: calc(52px + var(--safe-area-inset-top));
+  // Bottom inset of the device safe area (home indicator / gesture bar).
+  // Floating bottom bars fold it into their padding so they clear the system UI.
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --c--components--forms-checkbox--size: 24px;
   --toastify-z-index: 9999999;
 }
 
-@media screen and (max-width: breakpoint(tablet)) {
-  :root {
-    --header-height: calc(104px + var(--safe-area-inset-top));
+:root.native {
+  // Height of the floating bottom bar (controls + block paddings). Used to keep
+  // scrollable content clear of it and to stop the search overlay above it.
+  --mobile-bottom-bar-height: calc(64px + var(--safe-area-inset-bottom));
+}
+
+// Reserve room for the floating bottom bar so the last list item / message
+// isn't hidden behind it on the native app.
+.native .thread-panel__threads_list,
+.native .thread-view {
+  padding-bottom: var(--mobile-bottom-bar-height);
+}
+
+// BlockNote's mobile toolbar pins itself above the keyboard via its own
+// --bn-mobile-keyboard-offset (Visual Viewport based). The positioning rule
+// lives in @blocknote/react's stylesheet, which we don't load (mantine theme
+// only), so we declare it here.
+.native .bn-mobile-formatting-toolbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--bn-mobile-keyboard-offset, 0px);
+  z-index: 1100;
+  display: flex;
+  overflow-x: auto;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--safe-area-inset-bottom);
+  transition: bottom 0.15s ease-out;
+  // Solid bar so the buttons read against the content scrolling behind.
+  background-color: var(--c--contextuals--background--surface--secondary);
+  border-top: 1px solid var(--c--contextuals--border--surface--primary);
+
+  // Keep all buttons on a single horizontally-scrollable row.
+  .bn-formatting-toolbar {
+    flex-wrap: nowrap;
+    width: max-content;
+    box-shadow: none;
+    border: none;
+    background: transparent;
   }
+}
+
+html, body {
+  height: 100%;
 }
 
 body {

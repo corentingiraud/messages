@@ -52,6 +52,11 @@
                 min-width: 0;
                 flex: 1 1 auto;
             }
+
+            .thread-panel__header--mailbox {
+                font-weight: 500;
+                color: var(--c--contextuals--content--semantic--neutral--primary);
+            }
         }
     }
 

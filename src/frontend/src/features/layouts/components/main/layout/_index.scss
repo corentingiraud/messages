@@ -12,20 +12,26 @@
   }
 }
 
+// The header is an in-flow flex item (not fixed): the flex column splits the
+// 100dvh between the header and the content, so when the keyboard shrinks the
+// viewport the content shrinks with it instead of overflowing behind a fixed
+// header. position:relative keeps its stacking context above the content.
 .c__main-layout__header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
+  position: relative;
   z-index: 1000;
 }
 
 .c__main-layout__content {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
-  margin-top: var(--header-height);
   overflow: hidden;
+  // Containing block for the mobile left-panel drawer, which is absolutely
+  // positioned to fill this area (already below the in-flow header).
+  position: relative;
+  margin-top: 0;
 
   .c__left-panel {
     border-right: 0;
@@ -35,7 +41,7 @@
     display: flex;
 
     &__children {
-      height: calc(100dvh - var(--header-height));
+      height: 100%;
       width: 100%;
       flex: 1;
       overflow-y: auto;

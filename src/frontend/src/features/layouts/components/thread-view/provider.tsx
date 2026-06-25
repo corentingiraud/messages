@@ -1,4 +1,4 @@
-import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type ThreadViewProviderProps = PropsWithChildren<{
     threadId: string;
@@ -14,6 +14,9 @@ type ThreadViewContextType = {
     setHasBeenInitialized: (hasBeenInitialized: boolean) => void;
     isMessageFormFocused: boolean;
     setIsMessageFormFocused: (focused: boolean) => void;
+    /** Incremented to ask the latest message to open its reply form. */
+    replyRequest: number;
+    requestReply: () => void;
 }
 
 const ThreadViewContext = createContext<ThreadViewContextType | undefined>(undefined);
@@ -26,6 +29,9 @@ const ThreadViewProvider = ({ threadId, messageIds, children }: ThreadViewProvid
     const [messagesReadiness, setMessagesReadiness] = useState(new Map(messageIds.map((id) => [id, false])));
     const [hasBeenInitialized, setHasBeenInitialized] = useState(false);
     const [isMessageFormFocused, setIsMessageFormFocused] = useState(false);
+    const [replyRequest, setReplyRequest] = useState(0);
+
+    const requestReply = useCallback(() => setReplyRequest((n) => n + 1), []);
 
     const isReady = useMemo(() => {
         return Array.from(messagesReadiness.values()).every((isReady) => isReady === true);
@@ -68,7 +74,9 @@ const ThreadViewProvider = ({ threadId, messageIds, children }: ThreadViewProvid
         setHasBeenInitialized,
         isMessageFormFocused,
         setIsMessageFormFocused,
-    }), [isReady, setMessageReadiness, isMessageReady, reset, hasBeenInitialized, setHasBeenInitialized, isMessageFormFocused]);
+        replyRequest,
+        requestReply,
+    }), [isReady, setMessageReadiness, isMessageReady, reset, hasBeenInitialized, setHasBeenInitialized, isMessageFormFocused, replyRequest, requestReply]);
 
 
 

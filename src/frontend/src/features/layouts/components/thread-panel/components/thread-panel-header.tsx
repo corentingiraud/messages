@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { Button, Tooltip, Checkbox } from "@gouvfr-lasuite/cunningham-react";
 import useRead from "@/features/message/use-read";
-import { DropdownMenu, Icon, IconType, VerticalSeparator } from "@gouvfr-lasuite/ui-kit";
+import { DropdownMenu, Icon, IconType, VerticalSeparator, useResponsive } from "@gouvfr-lasuite/ui-kit";
 import ViewHelper from "@/features/utils/view-helper";
 import useArchive from "@/features/message/use-archive";
 import useSpam from "@/features/message/use-spam";
@@ -20,6 +20,7 @@ import { THREAD_PANEL_FILTER_PARAMS, useThreadPanelFilters } from "../hooks/use-
 import { SelectionReadStatus, SelectionStarredStatus } from "@/features/providers/thread-selection";
 import { LabelsWidget } from "@/features/layouts/components/labels-widget";
 import useAbility, { Abilities } from "@/hooks/use-ability";
+import { isNativePlatform } from "@/features/native/platform";
 
 type ThreadPanelTitleProps = {
     selectedThreadIds: Set<string>;
@@ -42,6 +43,7 @@ const REFRESH_FEEDBACK_DURATION_MS = 4000;
 
 const ThreadPanelTitle = ({ selectedThreadIds, isAllSelected, isSomeSelected, isSelectionMode, selectionReadStatus, selectionStarredStatus, onSelectAll, onClearSelection, onEnableSelectionMode, onDisableSelectionMode, isRefreshing, refreshFeedback, onClearRefreshFeedback }: ThreadPanelTitleProps) => {
     const { t } = useTranslation();
+    const { isDesktop } = useResponsive();
     const { markAsReadAt } = useRead();
     const { markAsArchived, markAsUnarchived } = useArchive();
     const { markAsTrashed, markAsUntrashed } = useTrash();
@@ -51,7 +53,7 @@ const ThreadPanelTitle = ({ selectedThreadIds, isAllSelected, isSomeSelected, is
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const searchParams = useUrlSearchParams();
     const isSearch = searchParams.has('search');
-    const { threads, selectedMailbox, unselectThread } = useMailboxContext();
+    const { threads, selectedMailbox, unselectThread, mailboxes } = useMailboxContext();
     const labelsQuery = useLabelsList({ mailbox_id: selectedMailbox?.id }, { query: { enabled: !!selectedMailbox && !!searchParams.get('label_slug') } })
     const isTrashedView = ViewHelper.isTrashedView();
     const isSpamView = ViewHelper.isSpamView();
@@ -201,11 +203,20 @@ const ThreadPanelTitle = ({ selectedThreadIds, isAllSelected, isSomeSelected, is
         ? t('Fetching mail…')
         : refreshFeedback ?? countLabel;
 
+    // With several accessible mailboxes, prefix the count with the active
+    // mailbox so the user always knows which box they are looking at. Only on
+    // viewports where the left panel (and its mailbox selector) is hidden —
+    // on desktop the selector already shows it.
+    const mailboxName = selectedMailbox?.name?.trim() || selectedMailbox?.email;
+    const showMailboxName = !isDesktop && (mailboxes?.length ?? 0) > 1 && !!mailboxName;
+    const detailsTitle = showMailboxName ? `${mailboxName} · ${detailsLabel}` : detailsLabel;
+
     return (
         <header className="thread-panel__header">
             <div className="thread-panel__header--title-row">
                 <h2 className="thread-panel__header--title">{title}</h2>
-                <ThreadPanelFilter />
+                {/* On the native app the filter lives in the bottom bar. */}
+                {!isNativePlatform() && <ThreadPanelFilter />}
             </div>
             <div className="thread-panel__header--details">
                 {(isSelectionMode || isSomeSelected) && (
@@ -217,7 +228,13 @@ const ThreadPanelTitle = ({ selectedThreadIds, isAllSelected, isSomeSelected, is
                         className="thread-panel__header--checkbox"
                     />
                 )}
-                <p className="thread-panel__header--count" title={detailsLabel}>
+                <p className="thread-panel__header--count" title={detailsTitle}>
+                    {showMailboxName && (
+                        <>
+                            <span className="thread-panel__header--mailbox">{mailboxName}</span>
+                            <span aria-hidden="true"> · </span>
+                        </>
+                    )}
                     {detailsLabel}
                 </p>
                 <div className="thread-panel__bar">

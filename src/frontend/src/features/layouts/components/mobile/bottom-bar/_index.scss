@@ -1,0 +1,26 @@
+.mobile-bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--c--globals--spacings--sm);
+  padding: var(--c--globals--spacings--sm);
+  // Fold the home-indicator inset into the bottom padding so the controls
+  // stay clear of the system gesture bar.
+  padding-bottom: calc(var(--c--globals--spacings--sm) + var(--safe-area-inset-bottom));
+  // The bar itself is just a positioning layer: clicks fall through the gaps
+  // to the content behind, only the floating controls are interactive.
+  pointer-events: none;
+  background: transparent;
+
+  > * {
+    pointer-events: auto;
+  }
+
+  // Give the floating controls their own surface + elevation so they read as
+  // distinct pills/buttons hovering over the content (no connecting bar).
+  --mobile-bottom-bar-elevation: 0 2px 10px rgba(0, 0, 0, 0.18);
+}

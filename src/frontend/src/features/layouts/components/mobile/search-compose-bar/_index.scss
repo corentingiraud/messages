@@ -1,0 +1,59 @@
+.mobile-search-compose-bar {
+  // Floating filter button (left): own surface + elevation, circular.
+  .thread-panel__filter-trigger {
+    display: inline-flex;
+    flex: 0 0 auto;
+
+    .c__button {
+      background-color: var(--c--contextuals--background--surface--primary);
+      box-shadow: var(--mobile-bottom-bar-elevation);
+      border-radius: 999px;
+    }
+  }
+
+  &__search {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    .search {
+      max-width: 100%;
+    }
+
+    // Floating search pill: opaque surface + elevation, fully rounded.
+    .search__container {
+      background-color: var(--c--contextuals--background--surface--primary);
+      box-shadow: var(--mobile-bottom-bar-elevation);
+      border-radius: 999px;
+    }
+
+    // On the native app the filters open as a near-full-screen overlay rather
+    // than a small dropdown. It stops just above the bottom bar so the search
+    // field stays visible and editable while filters are open.
+    .search__filters {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      // Above the search bar.
+      bottom: var(--mobile-bottom-bar-height);
+      width: auto;
+      height: auto;
+      max-width: none;
+      min-width: 0;
+      border: none;
+      border-radius: 0;
+      transform: none;
+      overflow-y: auto;
+      z-index: 1100;
+      padding-top: calc(var(--safe-area-inset-top) + var(--c--globals--spacings--md));
+      padding-bottom: var(--c--globals--spacings--md);
+    }
+  }
+
+  // Floating compose button (right): primary action, circular, elevated.
+  &__compose.c__button {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    box-shadow: var(--mobile-bottom-bar-elevation);
+  }
+}

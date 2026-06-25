@@ -39,6 +39,9 @@
 @use "./../features/layouts/components/mailbox-panel/components/mailbox-labels/components/label-item";
 @use "./../features/layouts/components/thread-panel";
 @use "./../features/layouts/components/thread-panel/components/thread-item";
+@use "./../features/layouts/components/mobile/bottom-bar";
+@use "./../features/layouts/components/mobile/search-compose-bar";
+@use "./../features/layouts/components/mobile/thread-toolbar";
 @use "./../features/native/pull-to-refresh-indicator";
 @use "./../features/layouts/components/labels-widget";
 @use "./../features/layouts/components/thread-view";

@@ -13,6 +13,7 @@ import { LayoutProvider, useLayoutDragContext } from "@/features/layouts/compone
 import { AttachmentPreviewModal } from "@/features/layouts/components/thread-view/components/attachment-preview-modal";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { isNativePlatform } from "@/features/native/platform";
 
 export const MainLayout = ({ children }: PropsWithChildren) => {
     return (
@@ -51,6 +52,7 @@ const MainLayoutContent = ({ children }: PropsWithChildren<{ simple?: boolean }>
             icon={<Link to="/"><img src={`/images/${theme}/app-logo-${variant}.svg`} alt={t("logo")} height={40} /></Link>}
             hideLeftPanelOnDesktop={hasNoMailbox}
             isDragging={isDragging}
+            hideSearch={isNativePlatform()}
         >
             {hasNoMailbox ? (
                 <NoMailbox />

@@ -17,6 +17,7 @@
 
 .new-message-form-container h1 {
     margin-block: var(--c--globals--spacings--md) var(--c--globals--spacings--xl);
+    color: red !important;
 }
 
 @media (max-width: breakpoint("tablet")) {

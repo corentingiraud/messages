@@ -1,0 +1,15 @@
+.mobile-thread-toolbar {
+  // Icon-only quick actions, aligned to the left (thumb side).
+  justify-content: flex-start;
+  gap: var(--c--globals--spacings--xs);
+  // Sit a little lower than the search bar: trim the extra bottom padding so
+  // the toolbar hugs the screen edge (still clearing the home indicator).
+  padding-bottom: calc(var(--c--globals--spacings--3xs) + var(--safe-area-inset-bottom));
+
+  .c__button {
+    flex: 0 0 auto;
+    background-color: var(--c--contextuals--background--surface--primary);
+    box-shadow: var(--mobile-bottom-bar-elevation);
+    border-radius: 999px;
+  }
+}
