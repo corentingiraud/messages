@@ -3,7 +3,7 @@ import {
   ModalSize,
   ModalTab,
 } from "@gouvfr-lasuite/cunningham-react";
-import { HorizontalSeparator } from "@gouvfr-lasuite/ui-kit";
+import { HorizontalSeparator, useResponsive } from "@gouvfr-lasuite/ui-kit";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMailboxContext } from "@/features/providers/mailbox";
@@ -63,6 +63,7 @@ export const ModalMailboxSettings = ({
   onClose,
   initialTab,
 }: ModalMailboxSettingsProps) => {
+  const { isMobile } = useResponsive();
   const { t } = useTranslation();
   const { mailboxes, selectedMailbox } = useMailboxContext();
   const isIntegrationsEnabled = useFeatureFlag(FEATURE_KEYS.MAILBOX_ADMIN_CHANNELS);
@@ -308,7 +309,7 @@ export const ModalMailboxSettings = ({
       isOpen={isOpen}
       aria-label={t("Settings")}
       onClose={guardedOnClose}
-      size={ModalSize.LARGE}
+      size={isMobile ? ModalSize.FULL : ModalSize.LARGE}
       variant="tab"
       sidebarTitle={<div className="mailbox-settings__identity">{sidebarHeader}</div>}
       tabs={tabs}

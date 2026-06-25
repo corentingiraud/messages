@@ -179,6 +179,25 @@ a.c__button.c__button--brand--primary.c__button--disabled {
   text-align: center;
 }
 
+// Fullscreen modals (Cunningham ModalSize.FULL, used on mobile) fill the screen
+// edge-to-edge with no padding of their own, so on devices with a notch / home
+// indicator the header and footer land under the system UI. Inset them by the
+// device safe area; resolves to 0 on desktop and on non-notched devices.
+.c__modal--full {
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+// On mobile, non-fullscreen modals are nearly full-width, so Cunningham's close
+// button (a static flex item, justified to the right) ends up flush in the
+// top-right corner. Give it breathing room from the edges.
+@media (max-width: 768px) {
+  .c__modal:not(.c__modal--full) .c__modal__close {
+    padding-top: var(--c--globals--spacings--sm);
+    padding-right: var(--c--globals--spacings--sm);
+  }
+}
+
 
 // Hide toast container as we use react-toastify
 .c__toast__container {
