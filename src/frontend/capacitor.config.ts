@@ -30,6 +30,14 @@ const config: CapacitorConfig = {
     CapacitorCookies: {
       enabled: true,
     },
+    // Disable Capacitor 8's built-in SystemBars inset listener: combined with
+    // windowSoftInputMode=adjustResize it double-applies the keyboard inset, so
+    // the WebView shrinks by twice the keyboard height (capacitor #8181, the
+    // Android < 15 variant). Trade-off: Capacitor stops injecting the safe-area
+    // values, so env(safe-area-inset-*) may resolve to 0.
+    SystemBars: {
+        insetsHandling: "disable",
+    },
   },
 };
 
