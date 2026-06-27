@@ -1,23 +1,35 @@
 """API ViewSet for Channel model."""
 
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
 
 from drf_spectacular.utils import (
     OpenApiResponse,
+    PolymorphicProxySerializer,
     extend_schema,
     inline_serializer,
 )
 from rest_framework import mixins, status, viewsets
 from rest_framework import serializers as drf_serializers
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 
 from core import models
 from core.enums import ChannelScopeLevel, ChannelTypes
 
 from .. import permissions, serializers
+
+
+class DeviceRegistrationThrottle(UserRateThrottle):
+    """Rate-limit device (push) registration per user.
+
+    Rate comes from ``DEFAULT_THROTTLE_RATES['device_registration']`` (settings).
+    """
+
+    scope = "device_registration"
 
 
 def _attach_credential(data: dict, channel: models.Channel) -> None:
@@ -311,3 +323,75 @@ class UserChannelViewSet(ChannelViewSet):
             "user": self.request.user,
             "scope_level": ChannelScopeLevel.USER,
         }
+
+    def get_throttles(self):
+        """Apply the device-registration throttle to push registrations only.
+
+        A push registration is a ``POST`` with ``type=push`` to this collection
+        (the device-registration upsert); it re-fires on every cold launch, so it
+        gets its own per-user rate. Every other action keeps the default throttles.
+        """
+        if (
+            self.request.method == "POST"
+            and self.request.data.get("type") == ChannelTypes.PUSH
+        ):
+            return [DeviceRegistrationThrottle()]
+        return super().get_throttles()
+
+    @extend_schema(
+        request=PolymorphicProxySerializer(
+            component_name="UserChannelCreateRequest",
+            serializers=[
+                serializers.ChannelSerializer,
+                serializers.PushChannelCreateSerializer,
+            ],
+            resource_type_field_name=None,
+        ),
+        responses={
+            200: OpenApiResponse(
+                response=serializers.ChannelSerializer,
+                description="Existing push device refreshed (idempotent re-register).",
+            ),
+            201: OpenApiResponse(
+                response=serializers.ChannelCreateResponseSerializer,
+                description="Channel created (or push device registered).",
+            ),
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        """Create a user-scoped channel.
+
+        Push devices register through this same endpoint with ``type=push`` and
+        the device fields ({platform, token, keys?, name?, app_version?}): rather
+        than a plain create, that path is an idempotent upsert keyed on the
+        token's hash (re-registering the same device updates the one row, 200; a
+        new device is 201). Listing/deleting devices then goes through the normal
+        list/destroy on this collection, giving device management for free. All
+        other ``type`` values fall through to the standard channel create.
+        """
+        if request.data.get("type") == ChannelTypes.PUSH:
+            return self._register_push_device(request)
+        return super().create(request, *args, **kwargs)
+
+    def _register_push_device(self, request):
+        """Upsert the caller's device as a user-scoped ``push`` Channel.
+
+        404s when push is disabled so the feature (and the token-reclaim path)
+        stays dark until an operator opts in.
+        """
+        if not settings.PUSH_ENABLED:
+            raise NotFound()
+
+        from core.services.push import (  # pylint: disable=import-outside-toplevel
+            register_push_device,
+        )
+
+        serializer = serializers.PushDeviceRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        channel, created = register_push_device(
+            user=request.user, **serializer.validated_data
+        )
+        return Response(
+            self.get_serializer(channel).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )

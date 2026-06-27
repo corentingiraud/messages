@@ -224,6 +224,110 @@ class Base(Configuration):
         environ_prefix=None,
     )
 
+    # Push notifications (mobile/web)
+    #
+    # Master switch. Everything in core.services.push is a hard no-op while
+    # this is False, so the feature is safe to merge dark: no tokens are
+    # pushed to, no external gateway is contacted, and the enqueue helper
+    # never schedules the Celery task. Flip to True *and* configure at least
+    # one gateway below to go live.
+    PUSH_ENABLED = values.BooleanValue(
+        False, environ_name="PUSH_ENABLED", environ_prefix=None
+    )
+
+    # APNs (Apple Push Notification service) — token-based auth (.p8).
+    # All four must be set for the iOS sender to be considered configured;
+    # otherwise it silently no-ops even when PUSH_ENABLED is True.
+    PUSH_APNS_KEY = values.Value(
+        None,
+        environ_name="PUSH_APNS_KEY",
+        environ_prefix=None,
+        help_text="Contents of the APNs auth key .p8 file (PEM).",
+    )
+    PUSH_APNS_KEY_ID = values.Value(
+        None, environ_name="PUSH_APNS_KEY_ID", environ_prefix=None
+    )
+    PUSH_APNS_TEAM_ID = values.Value(
+        None, environ_name="PUSH_APNS_TEAM_ID", environ_prefix=None
+    )
+    PUSH_APNS_BUNDLE_ID = values.Value(
+        None,
+        environ_name="PUSH_APNS_BUNDLE_ID",
+        environ_prefix=None,
+        help_text="App bundle id, used as the APNs topic.",
+    )
+    # Default (False) uses Apple's production gateway. Set True for the sandbox
+    # gateway, which only accepts tokens from a development-signed build.
+    PUSH_APNS_USE_SANDBOX = values.BooleanValue(
+        False, environ_name="PUSH_APNS_USE_SANDBOX", environ_prefix=None
+    )
+
+    # FCM (Firebase Cloud Messaging) HTTP v1 — service-account credentials.
+    # The service-account JSON yields an OAuth token; the project id selects
+    # the v1 endpoint. Both must be set for the Android sender to be live.
+    # No sandbox switch (unlike APNs): FCM has a single endpoint — separate
+    # staging from production by pointing at a different Firebase project
+    # (its own credentials + project id), not a flag.
+    PUSH_FCM_CREDENTIALS = values.Value(
+        None,
+        environ_name="PUSH_FCM_CREDENTIALS",
+        environ_prefix=None,
+        help_text="Service-account JSON (the whole file contents) as a string.",
+    )
+    PUSH_FCM_PROJECT_ID = values.Value(
+        None, environ_name="PUSH_FCM_PROJECT_ID", environ_prefix=None
+    )
+
+    # Web Push (VAPID). The private key + subject identify this server to the
+    # browser push services. Both must be set for the web sender to be live.
+    # No sandbox switch (unlike APNs): Web Push has no test gateway — delivery
+    # goes to whatever push-service URL the browser put in the subscription, and
+    # these keys are environment-agnostic (the same pair works everywhere).
+    #
+    # OPERATOR NOTE — keep the public/private pair in sync: the browser subscribes
+    # with PUSH_VAPID_PUBLIC_KEY as its applicationServerKey, and the push service
+    # then verifies every notification against the JWT this PRIVATE key signs. If
+    # the two don't match, *all* web push silently fails VAPID verification (403)
+    # — no error at registration or in /config. The public key is deterministic
+    # from this private key: derive the correct value with
+    # ``python manage.py derive_vapid_public_key`` and pin it as
+    # PUSH_VAPID_PUBLIC_KEY. After rotating this private key, re-derive and update
+    # the public key (and note that rotating it orphans every existing web
+    # subscription — clients must re-subscribe). Run
+    # ``derive_vapid_public_key --verify`` to check the configured pair matches.
+    PUSH_VAPID_PRIVATE_KEY = values.Value(
+        None,
+        environ_name="PUSH_VAPID_PRIVATE_KEY",
+        environ_prefix=None,
+        help_text="VAPID application-server private key (PEM or base64url).",
+    )
+    # The matching PUBLIC key, base64url-encoded (the uncompressed P-256 point
+    # the browser passes as ``applicationServerKey``). Exposed via /config so the
+    # web client can subscribe — it is public by definition, safe to publish.
+    # Required for Web Push: /config serves it verbatim and never derives it (so
+    # the web worker need not import the push graph). Obtain it once from the
+    # private key with the ``derive_vapid_public_key`` management command.
+    PUSH_VAPID_PUBLIC_KEY = values.Value(
+        None,
+        environ_name="PUSH_VAPID_PUBLIC_KEY",
+        environ_prefix=None,
+        help_text="VAPID application-server public key (base64url). Pair of the private key.",
+    )
+    PUSH_VAPID_SUBJECT = values.Value(
+        None,
+        environ_name="PUSH_VAPID_SUBJECT",
+        environ_prefix=None,
+        help_text="VAPID `sub` claim, e.g. 'mailto:ops@example.com'.",
+    )
+
+    # Hard ceiling on how many push devices one user may keep. Registering a new
+    # device beyond this prunes the user's least-recently-used device(s). Backs
+    # the (deliberately loose) device_registration throttle: the throttle caps
+    # request *rate*, this caps the persistent *fleet* a single account can grow.
+    PUSH_MAX_DEVICES_PER_USER = values.IntegerValue(
+        20, environ_name="PUSH_MAX_DEVICES_PER_USER", environ_prefix=None
+    )
+
     # Security
     ALLOWED_HOSTS = values.ListValue([])
     SECRET_KEY = values.Value(None)
@@ -820,6 +924,16 @@ class Base(Configuration):
             "widget_inbound_ip": values.Value(
                 default="10/minute",
                 environ_name="API_WIDGET_INBOUND_IP_THROTTLE_RATE",
+                environ_prefix=None,
+            ),
+            # Per-user cap on push device (re)registration. Clients re-register
+            # on every cold launch (and on token rotation) to refresh the
+            # device and its last_used_at, so this must comfortably exceed
+            # normal relaunch frequency while still bounding abuse; the hard
+            # ceiling on distinct devices is PUSH_MAX_DEVICES_PER_USER, not this.
+            "device_registration": values.Value(
+                default="30/hour",
+                environ_name="API_DEVICE_REGISTRATION_THROTTLE_RATE",
                 environ_prefix=None,
             ),
         },

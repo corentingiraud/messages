@@ -2353,6 +2353,21 @@ class ChannelSerializer(CreateOnlyFieldsMixin, serializers.ModelSerializer):
                             f"Allowed types: {', '.join(allowed_types)}"
                         }
                     )
+            # Push channels are device registrations handled by the dedicated
+            # upsert path on the collection POST (``type=push``). Block
+            # create/PATCH through the generic channel serializer so the
+            # queryable platform / lookup_hash can't be desynced from the
+            # encrypted token. (Create is also gated by the type allowlist; this
+            # additionally covers the read-only-type PATCH path on an existing
+            # push channel.)
+            instance_type = getattr(self.instance, "type", None)
+            if enums.ChannelTypes.PUSH in (channel_type, instance_type):
+                raise serializers.ValidationError(
+                    {
+                        "type": "push channels are managed via device registration "
+                        "(POST to this collection with type=push)."
+                    }
+                )
             self._reject_caller_supplied_encrypted_keys(attrs)
             self._validate_api_key_scopes(attrs)
             self._validate_webhook_settings(attrs)
@@ -2769,3 +2784,60 @@ class ThreadBulkDeleteRequestSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         """This serializer is only used to validate the data, not to create or update."""
+
+
+class PushDeviceRegistrationSerializer(serializers.Serializer):
+    """Validate a mobile/web device push registration.
+
+    Input for the push branch of ``UserChannelViewSet.create`` (a POST with
+    ``type=push``): the platform, the opaque push token, and optional client
+    metadata. The viewset turns this into a user-scoped ``push`` Channel (token
+    stored encrypted). ``keys`` carries the Web Push p256dh/auth pair; unused
+    for native platforms.
+    """
+
+    platform = serializers.ChoiceField(choices=enums.PushPlatformChoices.choices)
+    token = serializers.CharField(max_length=8192, trim_whitespace=False)
+    app_version = serializers.CharField(max_length=64, required=False, allow_blank=True)
+    keys = serializers.DictField(required=False)
+    name = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+    def validate_token(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("token must not be empty")
+        return value
+
+    def validate(self, attrs):
+        """Web Push needs the subscription keys, or the device can never be
+        delivered to — reject at registration rather than silently accepting a
+        web device that gets no pushes. Non-web platforms don't use keys."""
+        if attrs.get("platform") == enums.PushPlatformChoices.WEB:
+            keys = attrs.get("keys") or {}
+            if not keys.get("p256dh") or not keys.get("auth"):
+                raise serializers.ValidationError(
+                    {"keys": "web push requires keys.p256dh and keys.auth."}
+                )
+            # Persist only the two subscription keys we actually use, so a
+            # client can't make us store arbitrary blobs in encrypted_settings.
+            attrs["keys"] = {"p256dh": keys["p256dh"], "auth": keys["auth"]}
+        else:
+            attrs.pop("keys", None)
+        return attrs
+
+    def create(self, validated_data):
+        """Input-only serializer; the viewset performs the registration."""
+
+    def update(self, instance, validated_data):
+        """Input-only serializer; the viewset performs the registration."""
+
+
+class PushChannelCreateSerializer(PushDeviceRegistrationSerializer):
+    """Schema variant of the push registration body for ``POST .../channels/``.
+
+    Identical to ``PushDeviceRegistrationSerializer`` plus the ``type``
+    discriminator, so the polymorphic create endpoint documents the push shape
+    ({type:"push", platform, token, keys?, name?, app_version?}) alongside the
+    generic channel shape. Validation at runtime still uses the parent.
+    """
+
+    type = serializers.ChoiceField(choices=[enums.ChannelTypes.PUSH])

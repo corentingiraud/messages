@@ -1,6 +1,13 @@
 import { ConfigRetrieve200, useConfigRetrieve } from "@/features/api/gen";
+import { refreshWebPushSubscription } from "@/features/layouts/components/mailbox-settings/devices-view/web-push";
 import { Spinner } from "@gouvfr-lasuite/ui-kit";
-import { PropsWithChildren, createContext, useContext, useMemo } from "react";
+import {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+} from "react";
 
 type AppConfig = Omit<ConfigRetrieve200, 'DRIVE'> & Required<Pick<ConfigRetrieve200, 'DRIVE'>>;
 
@@ -35,6 +42,8 @@ const DEFAULT_CONFIG: AppConfig = {
     DRIVE: DEFAULT_DRIVE_CONFIG,
     MESSAGES_MANUAL_RETRY_MAX_AGE: 0,
     FRONTEND_SILENT_LOGIN_ENABLED: false,
+    PUSH_ENABLED: false,
+    PUSH_VAPID_PUBLIC_KEY: null,
 }
 
 const ConfigContext = createContext<AppConfig>(DEFAULT_CONFIG)
@@ -52,6 +61,15 @@ export const ConfigProvider = ({ children }: PropsWithChildren) => {
         DRIVE: config?.data?.DRIVE ?? DEFAULT_DRIVE_CONFIG,
       }
     }, [config])
+
+    // Self-heal web push on load: if the user previously enabled it in this
+    // browser, re-register the current subscription so a rotated endpoint
+    // doesn't silently stop delivering. Passive — no-ops unless a subscription
+    // already exists. See refreshWebPushSubscription.
+    useEffect(() => {
+      if (!configValue.PUSH_ENABLED || !configValue.PUSH_VAPID_PUBLIC_KEY) return;
+      refreshWebPushSubscription(configValue.PUSH_VAPID_PUBLIC_KEY);
+    }, [configValue.PUSH_ENABLED, configValue.PUSH_VAPID_PUBLIC_KEY]);
 
     if (!isFetched) {
         return (

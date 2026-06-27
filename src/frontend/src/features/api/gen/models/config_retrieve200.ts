@@ -41,4 +41,11 @@ export type ConfigRetrieve200 = {
   readonly MESSAGES_MANUAL_RETRY_MAX_AGE: number;
   /** Whether silent OIDC login is enabled */
   readonly FRONTEND_SILENT_LOGIN_ENABLED: boolean;
+  /** Whether push notifications are available on this deployment (gates the device-registration UI). */
+  readonly PUSH_ENABLED: boolean;
+  /**
+   * VAPID public key (base64url) the web client passes as applicationServerKey to subscribe; null when Web Push is not configured.
+   * @nullable
+   */
+  readonly PUSH_VAPID_PUBLIC_KEY: string | null;
 };

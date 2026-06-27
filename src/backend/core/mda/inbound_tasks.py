@@ -301,6 +301,20 @@ def process_inbound_message_task(self, inbound_message_id: str):
                     mailbox, ctx.parsed_email, inbound_msg, is_spam=bool(ctx.is_spam)
                 )
 
+            # Truly last step: fire-and-forget push now that the message is
+            # fully delivered. Gated so the default (push off) path adds no
+            # extra work. Spam is skipped: no point waking a device for it.
+            if (
+                isinstance(inbound_msg, models.Message)
+                and settings.PUSH_ENABLED
+                and not ctx.is_spam
+            ):
+                from core.services.push import (  # pylint: disable=import-outside-toplevel
+                    enqueue_push_notifications,
+                )
+
+                enqueue_push_notifications(inbound_msg)
+
             logger.info(
                 "Successfully processed inbound message %s (is_spam=%s)",
                 inbound_message_id,

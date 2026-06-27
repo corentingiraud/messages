@@ -18,7 +18,9 @@ import { CircularProgress } from "@/features/ui/components/circular-progress";
 import { TaskImportCacheHelper } from "@/features/utils/task-import-cache";
 import { useTheme } from "@/features/providers/theme";
 import { MODAL_MAILBOX_SETTINGS_ID } from "@/features/layouts/components/mailbox-settings/modal-mailbox-settings";
+import { MODAL_NOTIFICATIONS_ID } from "@/features/layouts/components/notifications-settings/modal-notifications";
 import { useModalStore } from "@/features/providers/modal-store";
+import { useConfig } from "@/features/providers/config";
 
 
 type AuthenticatedHeaderProps = HeaderProps & {
@@ -147,6 +149,10 @@ const ApplicationMenu = () => {
   const canManageIntegrations = canManageMessageTemplates && isIntegrationsEnabled;
   const canAdministrateSelectedMailbox = useAbility(Abilities.CAN_MANAGE_ACCESSES, selectedMailbox);
   const canOpenMailboxSettings = canAdministrateSelectedMailbox || canManageMessageTemplates || canManageIntegrations;
+  // Notifications/devices are user-scoped, so every user sees this entry when
+  // push is enabled — independent of any mailbox ability.
+  const config = useConfig();
+  const canManageNotifications = config.PUSH_ENABLED;
   const { t } = useTranslation();
   const navigate = useNavigate();
   const taskId = useMemo(() => {
@@ -155,7 +161,7 @@ const ApplicationMenu = () => {
   }, [isDropdownOpen, selectedMailbox?.id]);
 
   const taskStatus = useTaskStatus(taskId, { enabled: canImportMessages && isDropdownOpen });
-  const hasOptions = canAccessDomainAdmin || canImportMessages || canOpenMailboxSettings;
+  const hasOptions = canAccessDomainAdmin || canImportMessages || canOpenMailboxSettings || canManageNotifications;
   const importMessageOption = useMemo(() => {
     let label = t("Import messages");
     let icon = <Upload />;
@@ -214,6 +220,12 @@ const ApplicationMenu = () => {
                 showSeparator: canAccessDomainAdmin && !canImportMessages
               }] : []),
               ...(canImportMessages ? [importMessageOption] : []),
+              ...(canManageNotifications ? [{
+                label: t("Notifications"),
+                icon: <Icon name="notifications" style={{ fontSize: 24 }} />,
+                callback: () => openModal(MODAL_NOTIFICATIONS_ID),
+                showSeparator: canAccessDomainAdmin,
+              }] : []),
               ...(canAccessDomainAdmin ? [{
                 label: t("Domain admin"),
                 icon: <Icon name="domain" style={{ fontSize: 24 }} />,

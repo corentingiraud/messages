@@ -37,6 +37,9 @@ pytestmark = pytest.mark.django_db
     IMAGE_PROXY_ENABLED=False,
     MESSAGES_MANUAL_RETRY_MAX_AGE=86400,  # 1 day in seconds
     FRONTEND_SILENT_LOGIN_ENABLED=True,
+    PUSH_ENABLED=False,
+    PUSH_VAPID_PRIVATE_KEY=None,
+    PUSH_VAPID_PUBLIC_KEY=None,
 )
 @pytest.mark.parametrize("is_authenticated", [False, True])
 def test_api_config(is_authenticated):
@@ -71,6 +74,8 @@ def test_api_config(is_authenticated):
         "IMAGE_PROXY_ENABLED": False,
         "MESSAGES_MANUAL_RETRY_MAX_AGE": 86400,
         "FRONTEND_SILENT_LOGIN_ENABLED": True,
+        "PUSH_ENABLED": False,
+        "PUSH_VAPID_PUBLIC_KEY": None,
     }
 
 

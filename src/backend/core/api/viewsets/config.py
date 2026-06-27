@@ -151,6 +151,24 @@ class ConfigView(drf.views.APIView):
                             "description": "Whether silent OIDC login is enabled",
                             "readOnly": True,
                         },
+                        "PUSH_ENABLED": {
+                            "type": "boolean",
+                            "description": (
+                                "Whether push notifications are available on this "
+                                "deployment (gates the device-registration UI)."
+                            ),
+                            "readOnly": True,
+                        },
+                        "PUSH_VAPID_PUBLIC_KEY": {
+                            "type": "string",
+                            "nullable": True,
+                            "description": (
+                                "VAPID public key (base64url) the web client passes "
+                                "as applicationServerKey to subscribe; null when "
+                                "Web Push is not configured."
+                            ),
+                            "readOnly": True,
+                        },
                     },
                     "required": [
                         "ENVIRONMENT",
@@ -174,6 +192,8 @@ class ConfigView(drf.views.APIView):
                         "FEATURE_MAILDOMAIN_MANAGE_TOTP",
                         "MESSAGES_MANUAL_RETRY_MAX_AGE",
                         "FRONTEND_SILENT_LOGIN_ENABLED",
+                        "PUSH_ENABLED",
+                        "PUSH_VAPID_PUBLIC_KEY",
                     ],
                 },
             )
@@ -203,6 +223,8 @@ class ConfigView(drf.views.APIView):
             "MAX_INCOMING_EMAIL_SIZE",
             "MAX_RECIPIENTS_PER_MESSAGE",
             "FRONTEND_SILENT_LOGIN_ENABLED",
+            "PUSH_ENABLED",
+            "PUSH_VAPID_PUBLIC_KEY",
         ]
         dict_settings = {}
         for setting in array_settings:
